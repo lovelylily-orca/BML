@@ -57,6 +57,10 @@ def eval (M : Model World Atom) (w : World) : Proposition Atom → Prop
   | .and φ₁ φ₂ => eval M w φ₁ ∧ eval M w φ₂
   | .diamond φ => ∃ x : World, M.r w x ∧ eval M x φ
 
+/-- M ⊨ φ -/
+def eval_global (M : Model World Atom) : Proposition Atom → Prop
+  | φ => ∀ w : World, eval M w φ
+
 def or : Proposition Atom → Proposition Atom → Proposition Atom
   | φ₁, φ₂ => (φ₁.not.and φ₂.not).not
 
@@ -65,6 +69,11 @@ lemma eval_or : eval M w (φ₁.or φ₂) ↔ eval M w φ₁ ∨ eval M w φ₂ 
   unfold Proposition.or
   simp only [eval, not_and, not_not]
   tauto
+
+@[simp]
+lemma eval_diamond :
+    eval M w (.diamond φ) ↔ ∃ x : World, M.r w x ∧ eval M x φ := by
+  simp [eval]
 
 def imply : Proposition Atom → Proposition Atom → Proposition Atom
   | φ₁, φ₂ => (φ₁.and φ₂.not).not
@@ -77,9 +86,18 @@ lemma eval_imply : eval M w (φ₁.imply φ₂) ↔ (eval M w φ₁ -> eval M w 
 def box : Proposition A → Proposition A
   | φ => φ.not.diamond.not
 
+@[simp]
 lemma eval_box : eval M w φ.box ↔ ∀ x, M.r w x → eval M x φ := by
   unfold Proposition.box
   simp only [eval, not_exists, not_and, not_not]
+
+@[simp]
+lemma eval_not : eval M w φ.not ↔ ¬ (eval M w φ) := by
+  rfl
+
+@[simp]
+lemma eval_and : eval M w (φ₁.and φ₂) ↔ eval M w φ₁ ∧ eval M w φ₂ := by
+  rfl
 
 end Proposition
 
